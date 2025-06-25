@@ -728,6 +728,7 @@ export default function DashboardPage() {
                 onClick={() => setIsAddModalOpen(true)}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200"
                 size="lg"
+                disabled={loading}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Website
@@ -796,6 +797,8 @@ export default function DashboardPage() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleAddWebsite}
+        isLoading={loading}
+        error={error}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { X, Plus, Globe, Loader2 } from "lucide-react";
+import { X, Plus, Globe, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,66 +15,93 @@ interface AddWebsiteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (url: string, name?: string) => Promise<boolean>;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 export function AddWebsiteModal({
   isOpen,
   onClose,
   onSubmit,
+  isLoading = false,
+  error: externalError = null,
 }: AddWebsiteModalProps) {
   const [url, setUrl] = useState("");
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [validationError, setValidationError] = useState("");
+
+  // Combine external error with validation error
+  const displayError = externalError || validationError;
 
   const validateUrl = (url: string): boolean => {
     try {
-      new URL(url);
-      return true;
+      const urlObj = new URL(url);
+      // Check if it's a valid HTTP/HTTPS URL
+      return urlObj.protocol === "http:" || urlObj.protocol === "https:";
     } catch {
       return false;
     }
   };
 
+  const normalizeUrl = (url: string): string => {
+    // Add https:// if no protocol is specified
+    if (!url.match(/^https?:\/\//)) {
+      return `https://${url}`;
+    }
+    return url;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setValidationError("");
 
     if (!url.trim()) {
-      setError("URL is required");
+      setValidationError("URL is required");
       return;
     }
 
-    if (!validateUrl(url)) {
-      setError("Please enter a valid URL");
+    const normalizedUrl = normalizeUrl(url.trim());
+
+    if (!validateUrl(normalizedUrl)) {
+      setValidationError("Please enter a valid URL (e.g., https://example.com)");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const success = await onSubmit(url.trim(), name.trim() || undefined);
+      const success = await onSubmit(normalizedUrl, name.trim() || undefined);
       if (success) {
-        // Reset form and close modal
-        setUrl("");
-        setName("");
-        onClose();
+        // Reset form and close modal on success
+        handleClose();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add website");
+      // Error handling is done in the useWebsites hook
+      console.error("Failed to add website:", err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleClose = () => {
-    if (!isSubmitting) {
+    if (!isSubmitting && !isLoading) {
       setUrl("");
       setName("");
-      setError("");
+      setValidationError("");
       onClose();
     }
   };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUrl(e.target.value);
+    // Clear validation error when user starts typing
+    if (validationError) {
+      setValidationError("");
+    }
+  };
+
+  const isFormDisabled = isSubmitting || isLoading;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -94,13 +121,17 @@ export function AddWebsiteModal({
               <Label htmlFor="url">Website URL *</Label>
               <Input
                 id="url"
-                type="url"
-                placeholder="https://example.com"
+                type="text"
+                placeholder="example.com or https://example.com"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                disabled={isSubmitting}
+                onChange={handleUrlChange}
+                disabled={isFormDisabled}
                 className="w-full"
+                autoComplete="url"
               />
+              <p className="text-xs text-muted-foreground">
+                You can enter with or without https://
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -111,8 +142,9 @@ export function AddWebsiteModal({
                 placeholder="My Website"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                disabled={isSubmitting}
+                disabled={isFormDisabled}
                 className="w-full"
+                autoComplete="off"
               />
               <p className="text-xs text-muted-foreground">
                 If not provided, we'll use the domain name
@@ -120,13 +152,16 @@ export function AddWebsiteModal({
             </div>
           </div>
 
-          {error && (
+          {displayError && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg"
             >
-              <p className="text-sm text-destructive">{error}</p>
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-destructive">{displayError}</p>
+              </div>
             </motion.div>
           )}
 
@@ -135,16 +170,16 @@ export function AddWebsiteModal({
               type="button"
               variant="outline"
               onClick={handleClose}
-              disabled={isSubmitting}
+              disabled={isFormDisabled}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || !url.trim()}
+              disabled={isFormDisabled || !url.trim()}
               className="min-w-[100px]"
             >
-              {isSubmitting ? (
+              {isSubmitting || isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Adding...
