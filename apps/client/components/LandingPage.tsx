@@ -19,11 +19,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 import data from "../lib/landingPageData.json";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "@/components/ThemeProvider";
 import { redirect } from "next/navigation";
 
 const LandingPage: React.FC = () => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   const iconMap = {
     Zap,
@@ -63,60 +63,17 @@ const LandingPage: React.FC = () => {
       >
         <Sun className="h-4 w-4 text-amber-500" />
         <button
-          onClick={toggleTheme}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="relative w-11 h-6 bg-gray-200 dark:bg-gray-600 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <div
-            className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${theme === "dark" ? "translate-x-5" : ""}`}
+            className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${
+              theme === "dark" ? "translate-x-5" : ""
+            }`}
           />
         </button>
         <Moon className="h-4 w-4 text-indigo-400" />
       </motion.div>
-
-      {/* Navigation
-      <nav className="fixed top-0 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <motion.div
-              className="flex items-center gap-2"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <Activity className="h-8 w-8 text-emerald-500" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-                Uptime24
-              </span>
-            </motion.div>
-            <motion.div
-              className="hidden md:flex items-center gap-8"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <a
-                href="#features"
-                className="text-gray-600 dark:text-gray-300 hover:text-emerald-500 transition-colors"
-              >
-                Features
-              </a>
-              <a
-                href="#pricing"
-                className="text-gray-600 dark:text-gray-300 hover:text-emerald-500 transition-colors"
-              >
-                Pricing
-              </a>
-              <a
-                href="#testimonials"
-                className="text-gray-600 dark:text-gray-300 hover:text-emerald-500 transition-colors"
-              >
-                Reviews
-              </a>
-              <button className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg transition-colors">
-                Get Started
-              </button>
-            </motion.div>
-          </div>
-        </div>
-      </nav> */}
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">

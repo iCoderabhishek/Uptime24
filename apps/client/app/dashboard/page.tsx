@@ -387,7 +387,7 @@ function ThemeToggle() {
     <Button
       variant="ghost"
       size="sm"
-      onClick={() => setTheme(theme === "dark" ? "dark" : "light")}
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       className="w-9 h-9 rounded-lg"
     >
       {/* Sun icon - visible in light mode */}
