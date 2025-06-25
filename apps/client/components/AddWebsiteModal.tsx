@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { X, Plus, Globe, Loader2, AlertCircle } from "lucide-react";
+import { Plus, Globe, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ import {
 interface AddWebsiteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (url: string, name?: string) => Promise<boolean>;
+  onSubmit: (url: string) => Promise<boolean>;
   isLoading?: boolean;
   error?: string | null;
 }
@@ -27,17 +27,14 @@ export function AddWebsiteModal({
   error: externalError = null,
 }: AddWebsiteModalProps) {
   const [url, setUrl] = useState("");
-  const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState("");
 
-  // Combine external error with validation error
   const displayError = externalError || validationError;
 
   const validateUrl = (url: string): boolean => {
     try {
       const urlObj = new URL(url);
-      // Check if it's a valid HTTP/HTTPS URL
       return urlObj.protocol === "http:" || urlObj.protocol === "https:";
     } catch {
       return false;
@@ -45,7 +42,6 @@ export function AddWebsiteModal({
   };
 
   const normalizeUrl = (url: string): string => {
-    // Add https:// if no protocol is specified
     if (!url.match(/^https?:\/\//)) {
       return `https://${url}`;
     }
@@ -71,13 +67,11 @@ export function AddWebsiteModal({
     setIsSubmitting(true);
 
     try {
-      const success = await onSubmit(normalizedUrl, name.trim() || undefined);
+      const success = await onSubmit(normalizedUrl);
       if (success) {
-        // Reset form and close modal on success
         handleClose();
       }
     } catch (err) {
-      // Error handling is done in the useWebsites hook
       console.error("Failed to add website:", err);
     } finally {
       setIsSubmitting(false);
@@ -87,7 +81,6 @@ export function AddWebsiteModal({
   const handleClose = () => {
     if (!isSubmitting && !isLoading) {
       setUrl("");
-      setName("");
       setValidationError("");
       onClose();
     }
@@ -95,7 +88,6 @@ export function AddWebsiteModal({
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value);
-    // Clear validation error when user starts typing
     if (validationError) {
       setValidationError("");
     }
@@ -131,23 +123,6 @@ export function AddWebsiteModal({
               />
               <p className="text-xs text-muted-foreground">
                 You can enter with or without https://
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="name">Display Name (optional)</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="My Website"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isFormDisabled}
-                className="w-full"
-                autoComplete="off"
-              />
-              <p className="text-xs text-muted-foreground">
-                If not provided, we'll use the domain name
               </p>
             </div>
           </div>
